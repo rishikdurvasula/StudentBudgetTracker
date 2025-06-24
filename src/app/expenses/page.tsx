@@ -53,7 +53,7 @@ export default function ExpensesPage() {
                 <ExpenseForm />
               </div>
             </div>
-          )}
+          ) : null}
         </div>
       </div>
     </div>

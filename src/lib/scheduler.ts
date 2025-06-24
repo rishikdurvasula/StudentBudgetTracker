@@ -96,11 +96,11 @@ class BudgetScheduler {
       return null; // No expenses last week
     }
 
-    const totalSpent = expenses.reduce((sum, expense) => sum + expense.amount, 0);
+    const totalSpent = expenses.reduce((sum: number, expense: { amount: number }) => sum + expense.amount, 0);
     
     // Group by category
     const categoryBreakdown: Record<string, number> = {};
-    expenses.forEach(expense => {
+    expenses.forEach((expense: { amount: number; category: string; customCategoryName: string | null }) => {
       const category = expense.category === 'other' ? expense.customCategoryName || 'Other' : expense.category;
       categoryBreakdown[category] = (categoryBreakdown[category] || 0) + expense.amount;
     });
@@ -135,15 +135,6 @@ class BudgetScheduler {
   public async triggerWeeklyTasks(): Promise<void> {
     console.log('Manually triggering weekly tasks...');
     await this.runWeeklyTasks();
-  }
-
-  public async checkBudgetForUser(userId: string): Promise<BudgetCheckResult | null> {
-    try {
-      return await this.calculateUserBudget(userId);
-    } catch (error) {
-      console.error('Error checking budget for user:', error);
-      return null;
-    }
   }
 }
 
