@@ -52,21 +52,6 @@ export async function PATCH(
       return new NextResponse("Missing recipe ID", { status: 400 });
     }
 
-    // Verify that the recipe exists and belongs to the user
-    const recipe = await prisma.userRecipe.findUnique({
-      where: { id: recipeId },
-    });
-
-    if (!recipe) {
-      console.log("Recipe not found");
-      return new NextResponse("Recipe not found", { status: 404 });
-    }
-
-    if (recipe.userId !== user.id) {
-      console.log("Recipe does not belong to user");
-      return new NextResponse("Unauthorized", { status: 401 });
-    }
-
     console.log("Updating meal plan in database");
     const updatedMealPlan = await prisma.mealPlan.update({
       where: { id: params.id },

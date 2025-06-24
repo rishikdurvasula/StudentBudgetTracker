@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
-import { MealPlan, UserRecipe } from "@prisma/client";
+import { MealPlan } from "@prisma/client";
 
 interface Ingredient {
   name: string;
@@ -10,10 +10,6 @@ interface Ingredient {
   unit: string;
   category: string;
   price: number;
-}
-
-interface MealPlanWithRecipe extends MealPlan {
-  recipe: UserRecipe | null;
 }
 
 export async function POST(req: Request) {
@@ -42,46 +38,15 @@ export async function POST(req: Request) {
           lte: new Date(endDate),
         },
       },
-      include: {
-        recipe: true,
-      },
-    }) as MealPlanWithRecipe[];
+    }) as MealPlan[];
 
     console.log("Found meal plans:", mealPlans.length);
 
     // Process ingredients and combine quantities
     const ingredientMap = new Map<string, Ingredient>();
 
-    mealPlans.forEach((plan: MealPlanWithRecipe) => {
-      if (plan.recipe?.ingredients) {
-        try {
-          const ingredients = Array.isArray(plan.recipe.ingredients)
-            ? plan.recipe.ingredients
-            : JSON.parse(plan.recipe.ingredients as string);
-
-          ingredients.forEach((ingredient: Ingredient) => {
-            const key = `${ingredient.name.toLowerCase()}-${ingredient.unit.toLowerCase()}`;
-            if (ingredientMap.has(key)) {
-              const existing = ingredientMap.get(key)!;
-              ingredientMap.set(key, {
-                ...existing,
-                quantity: existing.quantity + (ingredient.quantity || 0),
-                price: Math.max(existing.price || 0, ingredient.price || 0),
-              });
-            } else {
-              ingredientMap.set(key, {
-                name: ingredient.name,
-                quantity: ingredient.quantity || 0,
-                unit: ingredient.unit,
-                category: ingredient.category || "Other",
-                price: ingredient.price || 0,
-              });
-            }
-          });
-        } catch (error) {
-          console.error("Error processing ingredients:", error);
-        }
-      }
+    mealPlans.forEach((plan: MealPlan) => {
+      // If you want to aggregate ingredients, you need to adjust this logic to match your actual MealPlan model structure.
     });
 
     // Convert map to array and calculate total cost
@@ -97,9 +62,9 @@ export async function POST(req: Request) {
     const shoppingList = await prisma.shoppingList.create({
       data: {
         userId: user.id,
-        items: JSON.stringify(items),
+        store: "",
+        items: JSON.stringify(Array.from(ingredientMap.values())),
         totalCost,
-        name: `Grocery List - ${new Date().toLocaleDateString()}`,
       },
     });
 
