@@ -1,4 +1,4 @@
-name: CI Check – Lockfile & Build
+name: CI Check – Build Verifier
 
 on:
   push:
@@ -21,13 +21,10 @@ jobs:
         with:
           node-version: 18
           cache: 'npm'
-          npm-version: 10.7.0
+          npm-version: 10.7.0  # Match your local version exactly
 
-      - name: 📦 Clean install to check lockfile integrity
-        run: |
-          rm -rf node_modules package-lock.json
-          npm install --package-lock-only
-          git diff --exit-code package-lock.json
+      - name: 📦 Install with CI (strict, reproducible)
+        run: npm ci
 
       - name: 🛠 Run build to ensure project compiles
         run: npm run build
