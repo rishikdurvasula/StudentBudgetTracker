@@ -21,6 +21,7 @@ jobs:
         with:
           node-version: 18
           cache: 'npm'
+          npm-version: 10.7.0
 
       - name: 📦 Clean install to check lockfile integrity
         run: |
