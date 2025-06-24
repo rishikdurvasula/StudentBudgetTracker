@@ -2,10 +2,6 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
-import { GoogleGenerativeAI } from "@google/generative-ai";
-
-// Initialize Gemini API
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY || "");
 
 // Sample recipe websites for variety
 const RECIPE_WEBSITES = [
@@ -76,7 +72,7 @@ export async function POST(req: Request) {
   }
 }
 
-async function generateRecommendations(shoppingList: any) {
+function generateRecommendations(shoppingList: any) {
   // This is a placeholder for the actual recommendation generation logic
   // You would typically integrate with an AI service or use predefined rules
   return {

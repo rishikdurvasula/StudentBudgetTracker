@@ -45,31 +45,10 @@ export async function PATCH(
     const body = await req.json();
     console.log("Update data:", body);
 
-    const { recipeId } = body;
-
-    if (!recipeId) {
-      console.log("Missing recipe ID");
-      return new NextResponse("Missing recipe ID", { status: 400 });
-    }
-
     console.log("Updating meal plan in database");
     const updatedMealPlan = await prisma.mealPlan.update({
       where: { id: params.id },
-      data: {
-        recipeId,
-      },
-      include: {
-        recipe: {
-          select: {
-            id: true,
-            title: true,
-            image: true,
-            prepTime: true,
-            cookTime: true,
-            servings: true,
-          },
-        },
-      },
+      data: {},
     });
 
     console.log("Meal plan updated:", updatedMealPlan.id);

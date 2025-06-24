@@ -46,18 +46,6 @@ export async function GET(req: Request) {
     console.log("Fetching meal plans with filter:", where);
     const mealPlans = await prisma.mealPlan.findMany({
       where,
-      include: {
-        recipe: {
-          select: {
-            id: true,
-            title: true,
-            image: true,
-            prepTime: true,
-            cookTime: true,
-            servings: true,
-          },
-        },
-      },
       orderBy: {
         date: "asc",
       },
@@ -132,18 +120,6 @@ export async function POST(req: Request) {
         date: new Date(date),
         mealType: mealType.toLowerCase(),
         userId: user.id,
-      },
-      include: {
-        recipe: {
-          select: {
-            id: true,
-            title: true,
-            image: true,
-            prepTime: true,
-            cookTime: true,
-            servings: true,
-          },
-        },
       },
     });
 

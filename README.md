@@ -8,7 +8,7 @@ A modern web application to help you manage your grocery shopping, track expense
 - **Grocery Lists:** Generate and manage shopping lists, and track grocery spending.
 - **Meal Planning:** Plan meals and generate grocery lists based on your meal plans.
 - **Savings Goals:** Set and monitor your savings targets.
-- **AI Recommendations:** Get personalized shopping, nutrition, and savings tips powered by Google Gemini AI.
+- **Smart Recommendations:** Get personalized shopping, nutrition, and savings tips.
 - **Alerts & Digests:** Receive alerts when you approach or exceed your budget, and get weekly digests.
 - **Authentication:** Secure login and registration with NextAuth.js.
 
@@ -16,7 +16,6 @@ A modern web application to help you manage your grocery shopping, track expense
 - **Frontend:** Next.js, React, TypeScript, Tailwind CSS, Radix UI, Recharts
 - **State/Data:** React Query, React Hook Form, Zod
 - **Backend:** Next.js API Routes, Prisma ORM, MongoDB, Node.js, node-cron, Nodemailer
-- **AI Integration:** Google Gemini (Generative AI)
 - **Other:** ESLint, Prettier, PostCSS, Autoprefixer
 
 ## Getting Started
