@@ -1,0 +1,188 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                String  @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String  @db.ObjectId
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.String
+  access_token      String? @db.String
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.String
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  sessionToken String   @unique
+  userId       String   @db.ObjectId
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String       @id @default(auto()) @map("_id") @db.ObjectId
+  name          String?
+  email         String?      @unique
+  emailVerified DateTime?
+  password      String?
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
+  mealPlans     MealPlan[]
+  groceries     Grocery[]
+  shoppingLists ShoppingList[]
+  groceryDays   GroceryDay[]
+  expenses      Expense[]
+  budgetAlerts  BudgetAlert[]
+  weeklyDigests WeeklyDigest[]
+  savingsGoals  SavingsGoal[]
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+}
+
+model MealPlan {
+  id        String     @id @default(auto()) @map("_id") @db.ObjectId
+  date      DateTime
+  mealType  String     // breakfast, lunch, dinner, snack
+  userId    String     @db.ObjectId
+  user      User       @relation(fields: [userId], references: [id])
+  notes     String?
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+model Grocery {
+  id             String       @id @default(auto()) @map("_id") @db.ObjectId
+  name           String
+  quantity       Float
+  unit           String
+  category       String
+  expiryDate     DateTime?
+  userId         String       @db.ObjectId
+  user           User         @relation(fields: [userId], references: [id])
+  shoppingListId String?      @db.ObjectId
+  shoppingList   ShoppingList? @relation(fields: [shoppingListId], references: [id])
+  checked        Boolean      @default(false)
+  price          Float        @default(0)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([userId])
+  @@index([shoppingListId])
+}
+
+model ShoppingList {
+  id        String   @id @default(cuid()) @map("_id")
+  userId    String
+  store     String   @default("")
+  items     Json     @default("[]")
+  totalCost Float    @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  groceries Grocery[]
+
+  @@index([userId])
+}
+
+model GroceryDay {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  date      DateTime
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Expense {
+  id                 String   @id @default(auto()) @map("_id") @db.ObjectId
+  amount             Float
+  description        String
+  category           ExpenseCategory
+  customCategoryName String?
+  date               DateTime
+  userId             String   @db.ObjectId
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([userId])
+  @@index([category])
+  @@index([date])
+}
+
+model BudgetAlert {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String   @db.ObjectId
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type        String   // "budget_warning", "budget_exceeded"
+  message     String
+  amount      Float
+  budget      Float
+  percentage  Float
+  isRead      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([isRead])
+}
+
+model WeeklyDigest {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String   @db.ObjectId
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  weekStart   DateTime
+  weekEnd     DateTime
+  totalSpent  Float
+  categoryBreakdown Json // { category: amount }
+  message     String
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([weekStart])
+}
+
+model SavingsGoal {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId       String   @db.ObjectId
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  goalName     String
+  targetAmount Float
+  targetDate   DateTime
+  currentAmount Float   @default(0)
+  category     String?
+  isCompleted  Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([userId])
+  @@index([isCompleted])
+  @@index([category])
+}
+
+enum ExpenseCategory {
+  academic
+  groceries
+  transport
+  leisure
+  rent
+  other
+} 

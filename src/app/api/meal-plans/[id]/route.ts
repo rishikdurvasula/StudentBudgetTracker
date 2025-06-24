@@ -1,0 +1,105 @@
+import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import prisma from "@/lib/prisma";
+
+export async function PATCH(
+  req: Request,
+  { params }: { params: { id: string } }
+) {
+  try {
+    console.log("Updating meal plan:", params.id);
+    const session = await getServerSession(authOptions);
+    console.log("Session:", session ? "Found" : "Not found");
+
+    if (!session?.user?.email) {
+      console.log("No user session or email found");
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
+
+    console.log("Looking up user with email:", session.user.email);
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email },
+    });
+
+    if (!user) {
+      console.log("User not found in database");
+      return new NextResponse("User not found", { status: 404 });
+    }
+
+    console.log("Looking up meal plan:", params.id);
+    const existingMealPlan = await prisma.mealPlan.findUnique({
+      where: { id: params.id },
+    });
+
+    if (!existingMealPlan) {
+      console.log("Meal plan not found");
+      return new NextResponse("Meal plan not found", { status: 404 });
+    }
+
+    if (existingMealPlan.userId !== user.id) {
+      console.log("Meal plan does not belong to user");
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
+
+    const body = await req.json();
+    console.log("Update data:", body);
+
+    const { recipeId } = body;
+
+    if (!recipeId) {
+      console.log("Missing recipe ID");
+      return new NextResponse("Missing recipe ID", { status: 400 });
+    }
+
+    // Verify that the recipe exists and belongs to the user
+    const recipe = await prisma.userRecipe.findUnique({
+      where: { id: recipeId },
+    });
+
+    if (!recipe) {
+      console.log("Recipe not found");
+      return new NextResponse("Recipe not found", { status: 404 });
+    }
+
+    if (recipe.userId !== user.id) {
+      console.log("Recipe does not belong to user");
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
+
+    console.log("Updating meal plan in database");
+    const updatedMealPlan = await prisma.mealPlan.update({
+      where: { id: params.id },
+      data: {
+        recipeId,
+      },
+      include: {
+        recipe: {
+          select: {
+            id: true,
+            title: true,
+            image: true,
+            prepTime: true,
+            cookTime: true,
+            servings: true,
+          },
+        },
+      },
+    });
+
+    console.log("Meal plan updated:", updatedMealPlan.id);
+    return NextResponse.json(updatedMealPlan);
+  } catch (error) {
+    console.error("Error updating meal plan:", error);
+    if (error instanceof Error) {
+      console.error("Error details:", {
+        message: error.message,
+        stack: error.stack
+      });
+    }
+    return new NextResponse(
+      `Internal Server Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      { status: 500 }
+    );
+  }
+} 
