@@ -6,10 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, BarChart3, Bell } from "lucide-react";
 import { ExpenseForm } from "@/components/ExpenseForm";
 import ExpenseDashboard from "@/components/ExpenseDashboard";
-import { AlertCenter } from "@/components/AlertCenter";
 
 export default function ExpensesPage() {
-  const [activeTab, setActiveTab] = useState<"dashboard" | "add" | "alerts">("dashboard");
+  const [activeTab, setActiveTab] = useState<"dashboard" | "add">("dashboard");
 
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-white p-6">
@@ -42,14 +41,6 @@ export default function ExpensesPage() {
             <Plus className="h-4 w-4" />
             Add Expense
           </Button>
-          <Button
-            variant={activeTab === "alerts" ? "default" : "ghost"}
-            onClick={() => setActiveTab("alerts")}
-            className="flex items-center gap-2"
-          >
-            <Bell className="h-4 w-4" />
-            Alerts
-          </Button>
         </div>
 
         {/* Content */}
@@ -62,8 +53,6 @@ export default function ExpensesPage() {
                 <ExpenseForm />
               </div>
             </div>
-          ) : (
-            <AlertCenter />
           )}
         </div>
       </div>

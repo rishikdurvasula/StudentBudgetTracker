@@ -48,9 +48,6 @@ class BudgetScheduler {
 
   private async runWeeklyTasks() {
     try {
-      // Check budget alerts
-      await this.checkBudgetAlerts();
-      
       // Generate weekly digests
       await this.generateWeeklyDigests();
       
@@ -58,88 +55,6 @@ class BudgetScheduler {
     } catch (error) {
       console.error('Error running weekly tasks:', error);
     }
-  }
-
-  private async checkBudgetAlerts(): Promise<void> {
-    const users = await prisma.user.findMany({
-      select: {
-        id: true,
-        email: true,
-        name: true,
-      },
-    });
-
-    for (const user of users) {
-      if (!user.email) continue;
-
-      const budgetResult = await this.calculateUserBudget(user.id);
-      
-      if (budgetResult.isOver80Percent || budgetResult.isOverBudget) {
-        await this.createBudgetAlert(user.id, budgetResult);
-      }
-    }
-  }
-
-  private async calculateUserBudget(userId: string): Promise<BudgetCheckResult> {
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { id: true, email: true, name: true },
-    });
-
-    if (!user || !user.email) {
-      throw new Error('User not found or no email');
-    }
-
-    // Get current month's expenses
-    const monthStart = startOfMonth(new Date());
-    const monthEnd = endOfMonth(new Date());
-
-    const expenses = await prisma.expense.findMany({
-      where: {
-        userId,
-        date: {
-          gte: monthStart,
-          lte: monthEnd,
-        },
-      },
-    });
-
-    const totalSpent = expenses.reduce((sum, expense) => sum + expense.amount, 0);
-    const percentageUsed = (totalSpent / MONTHLY_BUDGET) * 100;
-
-    return {
-      userId: user.id,
-      userEmail: user.email,
-      userName: user.name || 'User',
-      totalSpent,
-      percentageUsed,
-      isOver80Percent: percentageUsed >= 80,
-      isOverBudget: percentageUsed >= 100,
-    };
-  }
-
-  private async createBudgetAlert(userId: string, budgetResult: BudgetCheckResult): Promise<void> {
-    const alertType = budgetResult.isOverBudget ? 'budget_exceeded' : 'budget_warning';
-    
-    let message: string;
-    if (budgetResult.isOverBudget) {
-      message = `You've exceeded your monthly budget! You've spent $${budgetResult.totalSpent.toFixed(2)} out of $${MONTHLY_BUDGET.toFixed(2)} (${budgetResult.percentageUsed.toFixed(1)}%).`;
-    } else {
-      message = `Budget warning: You've used ${budgetResult.percentageUsed.toFixed(1)}% of your monthly budget. You've spent $${budgetResult.totalSpent.toFixed(2)} out of $${MONTHLY_BUDGET.toFixed(2)}.`;
-    }
-
-    await prisma.budgetAlert.create({
-      data: {
-        userId,
-        type: alertType,
-        message,
-        amount: budgetResult.totalSpent,
-        budget: MONTHLY_BUDGET,
-        percentage: budgetResult.percentageUsed,
-      },
-    });
-
-    console.log(`Created budget alert for user ${budgetResult.userEmail}: ${message}`);
   }
 
   private async generateWeeklyDigests(): Promise<void> {
